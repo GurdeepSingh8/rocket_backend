@@ -61,7 +61,7 @@ app.post('/webhook', async (req, res) => {
           created_time: new Date(createdTime * 1000).toISOString()
         });
   
-        console.log('Webhook Event:', webhookEvent);
+        // console.log('Webhook Event:', webhookEvent);
         res.status(200).send('EVENT_RECEIVED');
       }
     } catch (error) {

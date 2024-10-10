@@ -43,26 +43,31 @@ app.post('/webhook', async (req, res) => {
   const body = req.body; 
 
   if (body.object === 'page') {
-    for (const entry of body.entry) {
-      const webhookEvent = entry.changes[0];
-
-      const leadgenId = webhookEvent.value.leadgen_id;
-      const pageId = webhookEvent.value.page_id;
-      const formId = webhookEvent.value.form_id;
-      const createdTime = webhookEvent.value.created_time;
-
-      const leadRef = admin.firestore().collection('leads').doc(leadgenId);
-
-      await leadRef.set({
-        leadgen_id: leadgenId,
-        page_id: pageId,
-        form_id: formId,
-        created_time: new Date(createdTime * 1000).toISOString()
-      });
-
-      console.log('Webhook Event:', webhookEvent);
+    try {
+      for (const entry of body.entry) {
+        const webhookEvent = entry.changes[0];
+  
+        const leadgenId = webhookEvent.value.leadgen_id;
+        const pageId = webhookEvent.value.page_id;
+        const formId = webhookEvent.value.form_id;
+        const createdTime = webhookEvent.value.created_time;
+  
+        const leadRef = admin.firestore().collection('leads').doc(leadgenId);
+  
+        await leadRef.set({
+          leadgen_id: leadgenId,
+          page_id: pageId,
+          form_id: formId,
+          created_time: new Date(createdTime * 1000).toISOString()
+        });
+  
+        console.log('Webhook Event:', webhookEvent);
+        res.status(200).send('EVENT_RECEIVED');
+      }
+    } catch (error) {
+      console.error('Error handling webhook event:', error);
+      res.status(500).send('Internal Server Error');
     }
-    res.status(200).send('EVENT_RECEIVED');
   } else {
     res.sendStatus(404);
   }

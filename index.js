@@ -29,6 +29,16 @@ app.get('/webhook', (req, res) => {
   }
 });
 
+app.get('/test', (req, res) => {
+  res.status(200).send("get request successfull");
+})
+
+app.post('/submit', (req, res) => {
+  const name = req.body.name;
+
+  res.status(200).send({"name": name});
+})
+
 app.post('/webhook', async (req, res) => {
   const body = req.body; 
 

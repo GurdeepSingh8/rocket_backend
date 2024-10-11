@@ -41,7 +41,7 @@ app.post('/submit', (req, res) => {
 
 app.post('/webhook', async (req, res) => {
   const body = req.body; 
-
+  console.log("Received webhook");
   if (body.object === 'page') {
     try {
       for (const entry of body.entry) {
@@ -52,16 +52,16 @@ app.post('/webhook', async (req, res) => {
         const formId = webhookEvent.value.form_id;
         const createdTime = webhookEvent.value.created_time;
   
-        const leadRef = admin.firestore().collection('leads').doc(leadgenId);
+        // const leadRef = admin.firestore().collection('leads').doc(leadgenId);
   
-        await leadRef.set({
-          leadgen_id: leadgenId,
-          page_id: pageId,
-          form_id: formId,
-          created_time: new Date(createdTime * 1000).toISOString()
-        });
+        // await leadRef.set({
+        //   leadgen_id: leadgenId,
+        //   page_id: pageId,
+        //   form_id: formId,
+        //   created_time: new Date(createdTime * 1000).toISOString()
+        // });
   
-        // console.log('Webhook Event:', webhookEvent);
+        console.log('Webhook Event:', webhookEvent);
         res.status(200).send('EVENT_RECEIVED');
       }
     } catch (error) {

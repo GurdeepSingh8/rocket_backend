@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const admin = require('firebase-admin');
+const xhub = require('express-x-hub');
 
 
 const app = express();
@@ -8,6 +9,7 @@ const port = process.env.PORT || 3000;
 const serviceAccount = require('./serviceAccountKey.json');
 
 app.use(bodyParser.json());
+app.use(xhub({ algorithm: 'sha1', secret: "20a672ab50e4c772151641b4a3be76e3" }));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -29,19 +31,15 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-app.get('/test', (req, res) => {
-  res.status(200).send("get request successfull");
-})
-
-app.post('/submit', (req, res) => {
-  const name = req.body.name;
-
-  res.status(200).send({"name": name});
-})
-
 app.post('/webhook', async (req, res) => {
   const body = req.body; 
   console.log("Received webhook");
+  if (!req.isXHubValid()) {
+    console.log('Warning - request header X-Hub-Signature not present or invalid');
+    res.sendStatus(401);
+    return;
+  }
+  console.log('request header X-Hub-Signature validated');
   if (body.object === 'page') {
     try {
       for (const entry of body.entry) {
@@ -62,11 +60,11 @@ app.post('/webhook', async (req, res) => {
         // });
   
         console.log('Webhook Event:', webhookEvent);
-        res.status(200).send('EVENT_RECEIVED');
+        res.sendStatus(200);
       }
     } catch (error) {
       console.error('Error handling webhook event:', error);
-      res.status(500).send('Internal Server Error');
+      res.sendStatus(500);
     }
   } else {
     res.sendStatus(404);

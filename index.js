@@ -17,6 +17,9 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+app.get('/', (req, res) => {
+  res.status(200).send("Welcome to Rocket Backend");
+})
 app.get('/webhook', (req, res) => {
   const VERIFY_TOKEN = 'test123';
 

@@ -49,21 +49,13 @@ app.post('/webhook', async (req, res) => {
           const leadDetails = await axios.get(`https://graph.facebook.com/v17.0/${leadgenId}?access_token=EAATyCa4F2ZA0BO3XSAeZBusNDqm3SNgOisO65WeT0IekwDGDBCwXjW15TagvrRTlxZBo5Iu0auIJGZAkbffApVJFIGQ53074mjDu560itTZCfhI6owTazuX0LxsZC02FvIMPDkFbhelpTA8aFe2WjEX0wXFA6LwmuTuYvvhjJhpOLzLZBZB7G28sQuTj2KLArk4ZD`);
           
           // Log or process the lead details
-          console.log('Lead Details:', leadDetails.data);
-
+          leadDetails.data.field_data.forEach(field => {
+            console.log(`${field.name}:`, field.values);
+          });
           // You can store these lead details or forward them wherever needed
         } catch (fetchError) {
           console.error('Error fetching lead details:', fetchError);
         }
-  
-        // const leadRef = admin.firestore().collection('leads').doc(leadgenId);
-  
-        // await leadRef.set({
-        //   leadgen_id: leadgenId,
-        //   page_id: pageId,
-        //   form_id: formId,
-        //   created_time: new Date(createdTime * 1000).toISOString()
-        // });
   
         console.log('Webhook Event:', webhookEvent);
         res.sendStatus(200);

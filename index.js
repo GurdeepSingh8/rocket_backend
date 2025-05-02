@@ -55,6 +55,103 @@ function getCurrentDateTime() {
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
+/*
+Request body: {
+  "associateId": ,
+  "propertyId": ,
+  "fullName": ,
+  "phoneNumber": ,
+  "secondaryPhoneNumber": ,
+  "details": ,
+  "lead_source": associate_portfolio / property_detail / shared_property_detail
+}
+*/
+app.post("/lead", async (req, res) => {
+  const data = req.body;
+  db.collection("R_Associates")
+    .doc(data.associateId)
+    .get()
+    .then(async (associateData) => {
+      if (!associateData.data()) {
+        console.log("No matching documents.");
+        return;
+      }
+      let associateDoc = associateData.data();
+      let associateDocId = associateData.id;
+      if (associateDoc) {
+        try {
+          const clientDocRef = db.collection("R_Clients").doc();
+          const clientDocId = clientDocRef.id;
+          let client_name = data.fullName;
+          let firstName = data.fullName;
+          let lastName = data.fullName;
+          let created_on = getCurrentDateTime();
+          let noteText = data.details;
+          let number_primary = data.phoneNumber;
+          let country_code_primary = "+91";
+          db.collection("Test_Clients")
+            .doc(clientDocId)
+            .set({
+              assigned_to_team_member: "none",
+              added_in_group: [],
+              associate_id: associateDocId,
+              associate_reg_time: associateDoc.register_date,
+              client_is_new_for_associate_id: true,
+              country_code_primary: country_code_primary,
+              country_code_secondary: "+0",
+              client_name: client_name,
+              created_on: created_on,
+              database_id: associateDoc.database_id,
+              database_reg_time: associateDoc.database_reg_time,
+              default_whatsapp_number: "0",
+              display_name: client_name,
+              lead_source: data.leadSource,
+              note_by: [associateDocId],
+              note_text: [noteText],
+              number_primary: number_primary,
+              number_secondary: data.secondaryPhoneNumber,
+              source_id: data.leadSource,
+              source_reg_time: getCurrentDateTime(),
+            });
+          const ignoredFields = ["associateId", "propertyId", "leadSource"];
+          const newMap = Object.keys(data)
+            .filter((key) => !ignoredFields.includes(key))
+            .reduce((acc, key) => {
+              acc[key] = data[key];
+              return acc;
+            }, {});
+          db.collection("Test_leads").doc().set({
+            lead_details: newMap,
+            lead_source: data.leadSource,
+            associate_id: associateDocId,
+            source_id: data.propertyId,
+          });
+          db.collection("Test_Clients_Activities")
+            .doc(clientDocId)
+            .set({
+              act_by: [],
+              act_text: [],
+              act_title: [],
+              act_type: [],
+              act_urls: [],
+              assigned_to_team_member: "none",
+              associate_id: associateDocId,
+              associate_reg_time: associateDoc.register_date,
+              database_id: associateDoc.database_id,
+              database_reg_time: associateDoc.database_reg_time,
+              client_reference: `/R_Clients/${clientDocId}`,
+            });
+        } catch (fetchError) {
+          console.error("Error fetching lead details:", fetchError);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error finding document:", error);
+    });
+  res.sendStatus(200);
+});
+
 app.post("/webhook", async (req, res) => {
   const body = req.body;
   if (body.object === "page") {
@@ -86,7 +183,6 @@ app.post("/webhook", async (req, res) => {
                 const leadDetails = await axios.get(
                   `https://graph.facebook.com/v17.0/${leadgenId}?access_token=${associateDoc.linked_facebook_page_ids[pageId].page_access_token}`
                 );
-                console.log("lead details: ", leadDetails.data);
                 const clientDocRef = db.collection("R_Clients").doc();
                 const clientDocId = clientDocRef.id;
                 let client_name = "";
